@@ -26,12 +26,12 @@ Every agent is told to use only the cafe facts. If something is not in the facts
 ## Screenshots
 **Workflow canvas**
 
-![Workflow canvas](<img width="1366" height="768" alt="Canvas" src="https://github.com/user-attachments/assets/1bc809bf-1c74-4204-9e3b-63e38987d582" />)
+<img width="1366" height="768" alt="Canvas" src="https://github.com/user-attachments/assets/1bc809bf-1c74-4204-9e3b-63e38987d582" />
 
 
 **Successful runs, one for each agent**
 
-![Riya run]<img width="1366" height="768" alt="execution-riya png" src="https://github.com/user-attachments/assets/30088d95-9c14-41a1-a674-9fb8133edf59" />
+<img width="1366" height="768" alt="execution-riya png" src="https://github.com/user-attachments/assets/30088d95-9c14-41a1-a674-9fb8133edf59" />
 
 ![Arjun run](screenshots/run-arjun.png)
 ![Ira run](screenshots/run-ira.png)
