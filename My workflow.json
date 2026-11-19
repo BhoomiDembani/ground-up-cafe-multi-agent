@@ -1,0 +1,474 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ground-up-cafe",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8da23000-a124-45bd-ac6f-0bdd6defd3b8",
+      "name": "Webhook",
+      "webhookId": "da7c1825-400b-40f2-89dc-8ab9328ee65b"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "cafe_facts",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "467e0d17-5ffe-4797-8593-c6850858accd",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0FVcKanywonNuUZE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        -192
+      ],
+      "id": "b4b99af8-ff77-42d0-a939-5361daaa4376",
+      "name": "Google Gemini Chat Model",
+      "notesInFlow": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8mzNLdoGOhLf1kAs",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1424,
+        0
+      ],
+      "id": "2df5aef3-8ed5-47f7-9725-78d392541275",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $('Webhook').item.json.body.message }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "general",
+              "description": "Customer asks about menu, prices, timings, location, Jain or vegan options, Wi-Fi, payments, or any general question"
+            },
+            {
+              "category": "bookings",
+              "description": "Customer wants to book or reserve a table"
+            },
+            {
+              "category": "events",
+              "description": "Customer asks about workshops, private events, group events, parties, book clubs, open mic or hiring the cafe space"
+            },
+            {
+              "category": "orders",
+              "description": "Customer wants to place a bulk order, catering, or asks about delivery and order payments"
+            }
+          ]
+        },
+        "options": {
+          "fallback": "discard"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        -32
+      ],
+      "id": "1c1081d3-8efc-4e40-ab58-eba94d8ece91",
+      "name": "Text Classifier",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        208
+      ],
+      "id": "a8a478b7-29aa-4b3b-83b8-432d557d81db",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8mzNLdoGOhLf1kAs",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Aggregate').first().json.Menu.map(i => i.topic + ': ' + i.info).join('\\n') }}",
+        "options": {
+          "systemMessage": "=You are Riya, the friendly front desk assistant of Ground Up Cafe, Pune. You answer questions about the menu, prices, timings, locations, Jain and vegan options, Wi-Fi and payments. When someone asks about the menu, mention a few relevant items with prices.\n\nRULES\n- Always reply in clear, polite, proper English, even if the customer writes in Hindi or Hinglish.\n- Keep replies short: 2 to 4 sentences, friendly and professional. No emojis.\n- Use ONLY the cafe facts below. Never invent prices, timings, offers or availability.\n- If something is not in the facts, say: \"I will check with our team and get back to you. May I have your name and phone number?\"\n- Never confirm a booking or event yourself. Say the team will confirm shortly.\n- Ask for only one missing detail at a time.\n\nCAFE FACTS\n{{ $('Get many rows').all().map(i => i.json.topic + ': ' + i.json.info).join('\\n') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1040,
+        -336
+      ],
+      "id": "65dcbc33-ed64-4073-89e6-63d1bf9fc3a6",
+      "name": "Riya",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Aggregate').first().json.Menu.map(i => i.topic + ': ' + i.info).join('\\n') }}",
+        "options": {
+          "systemMessage": "=You are Arjun, the table booking assistant of Grround Up Cafe, Pune. To book a table you need: name, phone number, number of guests, date and time. Check what the customer has already given and ask only for what is missing. When you have everything, summarise the booking and say our team will confirm shortly.\n\nRULES\n- Always reply in clear, polite, proper English, even if the customer writes in Hindi or Hinglish.\n- Keep replies short: 2 to 4 sentences, friendly and professional. No emojis.\n- Use ONLY the cafe facts below. Never invent prices, timings, offers or availability.\n- If something is not in the facts, say: \"I will check with our team and get back to you. May I have your name and phone number?\"\n- Never confirm a booking or event yourself. Say the team will confirm shortly.\n- Ask for only one missing detail at a time.\n\nCAFE FACTS\n{{ $('Get many rows').all().map(i => i.json.topic + ': ' + i.json.info).join('\\n') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1040,
+        -128
+      ],
+      "id": "be036164-81ae-4349-ae9a-a3702847c99b",
+      "name": "Arjun",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Aggregate').first().json.Menu.map(i => i.topic + ': ' + i.info).join('\\n') }}",
+        "options": {
+          "systemMessage": "=You are Meera, who handles bulk orders and payments at Ground Up Cafe, Pune. Share prices, the bulk discount and notice period. To take an order you need: quantity, delivery date, delivery address and a phone number. Ask for what is missing, one detail at a time.\n\nRULES\n- Always reply in clear, polite, proper English, even if the customer writes in Hindi or Hinglish.\n- Keep replies short: 2 to 4 sentences, friendly and professional. No emojis.\n- Use ONLY the cafe facts below. Never invent prices, timings, offers or availability.\n- If something is not in the facts, say: \"I will check with our team and get back to you. May I have your name and phone number?\"\n- Never confirm a booking or event yourself. Say the team will confirm shortly.\n- Ask for only one missing detail at a time.\n\nCAFE FACTS\n{{ $('Get many rows').all().map(i => i.json.topic + ': ' + i.json.info).join('\\n') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1072,
+        304
+      ],
+      "id": "bab0416e-15e3-421d-8485-ba50590e92e1",
+      "name": "Meera",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Aggregate').first().json.Menu.map(i => i.topic + ': ' + i.info).join('\\n') }}",
+        "options": {
+          "systemMessage": "=You are Ira, the events assistant of Ground Up Cafe, Pune. You help with workshops, private events and group bookings. Describe the workshops we offer. To request an event you need: type of event, number of guests, preferred date and time, and a phone number. Ask for what is missing, one detail at a time. For pricing say our events team will confirm.\n\nRULES\n- Always reply in clear, polite, proper English, even if the customer writes in Hindi or Hinglish.\n- Keep replies short: 2 to 4 sentences, friendly and professional. No emojis.\n- Use ONLY the cafe facts below. Never invent prices, timings, offers or availability.\n- If something is not in the facts, say: \"I will check with our team and get back to you. May I have your name and phone number?\"\n- Never confirm a booking or event yourself. Say the team will confirm shortly.\n- Ask for only one missing detail at a time.\n\nCAFE FACTS\n{{ $('Get many rows').all().map(i => i.json.topic + ': ' + i.json.info).join('\\n') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1056,
+        80
+      ],
+      "id": "f1839891-ce7b-46d1-af48-0365d5789858",
+      "name": "Ira",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "031e0e5c-b3b4-44a3-8c2d-88f59fabeb58",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8mzNLdoGOhLf1kAs",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        208
+      ],
+      "id": "3d9dc257-f55a-4bf7-84f1-6e579b125a52",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8mzNLdoGOhLf1kAs",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        464
+      ],
+      "id": "bc093f84-9040-40fd-bfb9-8a17b3c61bef",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8mzNLdoGOhLf1kAs",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Menu",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "c478c171-acab-4f0e-a82f-948c29dd4550",
+      "name": "Aggregate"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Riya",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Riya",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Arjun",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ira",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Meera",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Riya": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Arjun": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ira": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meera": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Arjun",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Ira",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Meera",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b392dde8-15a2-48ee-ab26-cfaf5be8bbb1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9a617df9980cc6e4ff5b2a746569a4b4f496281315b33228590475db0f1d817e"
+  },
+  "nodeGroups": [],
+  "id": "7uTMYQF3pduAtmp1",
+  "tags": []
+}
