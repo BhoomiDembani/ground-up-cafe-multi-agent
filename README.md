@@ -33,9 +33,12 @@ Every agent is told to use only the cafe facts. If something is not in the facts
 
 <img width="1366" height="768" alt="execution-riya png" src="https://github.com/user-attachments/assets/30088d95-9c14-41a1-a674-9fb8133edf59" />
 
-![Arjun run](screenshots/run-arjun.png)
-![Ira run](screenshots/run-ira.png)
-![Meera run](screenshots/run-meera.png)
+<img width="1366" height="768" alt="execution-arjun png" src="https://github.com/user-attachments/assets/54306617-647e-4a1d-8b1f-2fb3959cb03d" />
+
+<img width="1366" height="768" alt="execution-ira png" src="https://github.com/user-attachments/assets/92273912-8378-48fb-b910-37c062e9f7f1" />
+
+<img width="1366" height="768" alt="execution-meera png" src="https://github.com/user-attachments/assets/6b071509-b8f2-46e6-9039-1590b4701b1f" />
+
 
 ## Files in this repo
 | File | What it is |
@@ -43,7 +46,7 @@ Every agent is told to use only the cafe facts. If something is not in the facts
 | `index.html` | The customer message page |
 | `workflow.json` | The n8n workflow (import it into n8n) |
 | `supabase.sql` | Creates and fills the `cafe_facts` table with sample facts |
-| `screenshots/` | Pictures of the workflow and successful runs |
+| `screenshots` | Pictures of the workflow and successful runs |
 
 ## What I learned
 - An agent only answers as well as the facts it is given, so the cafe facts live in a database and are loaded on every message.
