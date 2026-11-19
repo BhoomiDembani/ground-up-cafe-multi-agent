@@ -26,7 +26,7 @@ Every agent is told to use only the cafe facts. If something is not in the facts
 ## Screenshots
 **Workflow canvas**
 
-![Workflow canvas]<img width="1366" height="768" alt="Canvas" src="https://github.com/user-attachments/assets/1bc809bf-1c74-4204-9e3b-63e38987d582" />
+![Workflow canvas](<img width="1366" height="768" alt="Canvas" src="https://github.com/user-attachments/assets/1bc809bf-1c74-4204-9e3b-63e38987d582" />)
 
 
 **Successful runs, one for each agent**
